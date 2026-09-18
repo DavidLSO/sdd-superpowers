@@ -41,6 +41,12 @@ artifacts:
         optional artifact that restructures brainstorm.md.
       - When the brainstorming skill asks to commit the design doc,
         commit ONLY `openspec/changes/<change-name>/` (never `git add -A`).
+      - STOP after brainstorm.md is written. The brainstorming skill's
+        final step ("transition to implementation — invoke
+        writing-plans") does NOT apply here: proposal, specs and tasks
+        come first via `/opsx:continue`, and plan.md is produced by the
+        `plan` artifact later. Tell the user the next step is
+        `/opsx:continue` (proposal).
 
       The brainstorming skill will:
       1. Explore project context
@@ -514,13 +520,14 @@ apply:
        worktree for this change, branched from the branch recorded in
        step 0d. Name the worktree branch `<change-name>`.
 
-       Ledger hygiene: subagent-driven-development keys its progress
-       ledger on the plan file's basename (`.superpowers/sdd/plan/`
-       inside the worktree root). Every change in this schema names its
-       plan `plan.md`, so a fresh worktree per change is what keeps
-       ledgers apart. If `.superpowers/sdd/plan/` already exists in the
-       worktree and does not belong to this change, delete it before
-       step 2.
+       Ledger hygiene: subagent-driven-development keeps its progress
+       ledger at `.superpowers/sdd/<plan-basename>/progress.md` inside
+       the worktree root, with the plan's full path on its first line.
+       Every change in this schema names its plan `plan.md`, so pass the
+       full path `openspec/changes/<name>/plan.md` to the skill and, if
+       a ledger for a different change's plan is already there, delete
+       that directory before step 2 (a fresh worktree per change avoids
+       this entirely).
 
     2. **Executor** — use the Skill tool to invoke
        **superpowers:subagent-driven-development** to execute the

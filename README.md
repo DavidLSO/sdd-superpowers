@@ -84,7 +84,7 @@ Para pular o schema numa change específica: `/opsx:new fix-rapido --schema spec
 
 ## Aviso: ledger do subagent-driven-development (Superpowers ≥ 6.x)
 
-A skill grava o progresso em `.superpowers/sdd/<basename-do-plano>/` na raiz da worktree. Como todo plano deste schema se chama `plan.md`, o diretório é sempre `.superpowers/sdd/plan/`. Isso só é seguro porque cada change roda na própria worktree — nunca rode `/opsx:apply` no checkout principal, e se reaproveitar uma worktree entre changes, apague esse diretório antes (o passo 1 do apply instrui isso).
+A skill grava o progresso em `.superpowers/sdd/<basename-do-plano>/progress.md` na raiz da worktree, com o caminho completo do plano na primeira linha. Como todo plano deste schema se chama `plan.md`, o diretório é sempre `.superpowers/sdd/plan/`; a skill distingue changes pelo caminho gravado no ledger, mas não apaga o ledger alheio. Rode `/opsx:apply` sempre numa worktree por change (o passo 1 do apply instrui a limpar um ledger de outra change, se houver).
 
 ## Licença
 

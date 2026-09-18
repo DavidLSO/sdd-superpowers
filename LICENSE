@@ -2,6 +2,12 @@ MIT License
 
 Copyright (c) 2026 David Levy Sousa Oliveira
 
+Derived from:
+- danielhanold/superspec — Copyright (c) 2026 Daniel Hanold (MIT)
+- JiangWay/openspec-schemas (superpowers-bridge) — Copyright (c) 2026 JiangWay (MIT)
+- Fission-AI/OpenSpec spec-driven schema instructions (MIT)
+
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights

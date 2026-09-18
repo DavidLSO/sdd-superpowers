@@ -1,97 +1,97 @@
 # sdd-superpowers
 
-Schema customizado do [OpenSpec](https://github.com/Fission-AI/OpenSpec) que integra o pipeline de artefatos (spec-driven) com as skills de execução do [Superpowers](https://github.com/obra/superpowers) (brainstorming, writing-plans, worktrees, subagent-driven TDD, code review, finishing-a-development-branch).
+Custom [OpenSpec](https://github.com/Fission-AI/OpenSpec) schema that wires the spec-driven artifact pipeline into the execution skills of [Superpowers](https://github.com/obra/superpowers) (brainstorming, writing-plans, worktrees, subagent-driven TDD, code review, finishing-a-development-branch).
 
-É um híbrido de dois projetos MIT, pegando o melhor de cada:
+It is a hybrid of two MIT projects, taking the best of each:
 
-| Vem de | O quê |
+| From | What |
 |---|---|
-| [danielhanold/superspec](https://github.com/danielhanold/superspec) v4 | Mecânica do workflow: commit pre-flight dos artefatos antes do worktree, `apply.md` como recibo (verify só depois de apply existir), `design.md` opcional, loop de convergência apply → verify com contador de iteração |
-| [JiangWay/openspec-schemas](https://github.com/JiangWay/openspec-schemas) `superpowers-bridge` v1 | PRECHECK de skills antes de invocar, `brainstorm.md` como captura bruta e `design.md` como reestruturação, artefato `retrospective` (evidência primeiro, candidatos a memória), guia "quando NÃO abrir uma change", fragmento para `CLAUDE.md` |
-| Este repo | `finalize` invoca a skill `superpowers:finishing-a-development-branch` em vez de embutir 350 linhas de bash; base branch resolvida sem depender de `origin/main`; templates 100% em inglês; alinhado ao OpenSpec 1.13 (`skip_specs`, regra de checkbox `[x]`, `## Purpose` em capability nova) |
+| [danielhanold/superspec](https://github.com/danielhanold/superspec) v4 | Workflow mechanics: pre-flight commit of the artifacts before the worktree is created, `apply.md` as a receipt (verify only after apply exists), optional `design.md`, apply → verify convergence loop with an iteration counter |
+| [JiangWay/openspec-schemas](https://github.com/JiangWay/openspec-schemas) `superpowers-bridge` v1 | Skill PRECHECK before every invocation, `brainstorm.md` as raw capture and `design.md` as its restructuring, `retrospective` artifact (evidence first, memory candidates), "when NOT to open a change" guidance, `CLAUDE.md` fragment |
+| This repo | `finalize` invokes `superpowers:finishing-a-development-branch` instead of embedding 350 lines of bash; base branch resolved without depending on `origin/main`; templates 100% in English; aligned with OpenSpec 1.13 (`skip_specs`, `[x]` checkbox rule, `## Purpose` on new capabilities) |
 
-Validado com `openspec schema validate` no OpenSpec **1.13.1** e escrito contra Superpowers **6.3.0**.
+Validated with `openspec schema validate` on OpenSpec **1.13.1**, written against Superpowers **6.3.0**.
 
-## Fluxo
+## Flow
 
 ```text
-PLANEJAMENTO
+PLANNING
   brainstorm.md ──┬─→ proposal.md ──→ specs/**/*.md ──→ tasks.md ──→ plan.md
-                  └─→ design.md (opcional; "Not needed: <motivo>" para pular)
+                  └─→ design.md (optional; "Not needed: <reason>" to skip)
 
-APLICAÇÃO  (/opsx:apply — requires: plan, tracks: tasks.md)
-  0. pre-flight: skills, ferramentas, commit de openspec/changes/<name>/
+APPLY  (/opsx:apply — requires: plan, tracks: tasks.md)
+  0. pre-flight: skills, tooling, commit of openspec/changes/<name>/
   1. superpowers:using-git-worktrees
-  2. superpowers:subagent-driven-development (+ TDD + code-review transitivos)
-  3. apply.md (recibo, iteração N)
-  4. /opsx:verify → verify.md ──FAIL──→ volta ao passo 2
+  2. superpowers:subagent-driven-development (+ TDD + code-review, transitive)
+  3. apply.md (receipt, iteration N)
+  4. /opsx:verify → verify.md ──FAIL──→ back to step 2
 
-FECHAMENTO
+CLOSING
   retrospective.md → finalize.md (superpowers:finishing-a-development-branch) → /opsx:archive
 ```
 
-Cada artefato só fica disponível quando o anterior existe; `verify` exige `apply.md`, então não dá para verificar antes de implementar.
+Each artifact becomes available only when the previous one exists; `verify` requires `apply.md`, so it is impossible to verify before implementing.
 
-## Instalação
+## Installation
 
-Pré-requisitos: OpenSpec ≥ 1.13 e o plugin Superpowers instalado no seu harness (Claude Code: `claude plugin install superpowers@claude-plugins-official`).
+Prerequisites: OpenSpec ≥ 1.13 and the Superpowers plugin installed in your harness (Claude Code: `claude plugin install superpowers@claude-plugins-official`).
 
 ```bash
-# uma vez por máquina: o perfil "core" instala só 4 comandos /opsx; o schema precisa de new/continue/ff/verify
+# once per machine: the "core" profile installs only 4 /opsx commands; the schema needs new/continue/ff/verify
 openspec config set profile custom
 openspec config set workflows '["propose","explore","new","continue","apply","ff","sync","archive","bulk-archive","verify","update"]'
 
-# na raiz do projeto que vai usar o schema
-openspec init                       # se ainda não tem openspec/ (ou `openspec update --force` para regenerar os comandos)
+# at the root of the project that will use the schema
+openspec init                       # if there is no openspec/ yet (or `openspec update --force` to regenerate the commands)
 mkdir -p openspec/schemas
-cp -r /caminho/para/sdd-superpowers/openspec/schemas/sdd-superpowers openspec/schemas/
-echo "schema: sdd-superpowers" > openspec/config.yaml   # ou use --schema por change
+cp -r /path/to/sdd-superpowers/openspec/schemas/sdd-superpowers openspec/schemas/
+echo "schema: sdd-superpowers" > openspec/config.yaml   # or use --schema per change
 
 openspec schema validate sdd-superpowers
-openspec schemas                    # sdd-superpowers deve aparecer
+openspec schemas                    # sdd-superpowers must be listed
 ```
 
-Opcional, mas recomendado: cole `openspec/schemas/sdd-superpowers/templates/adopters/CLAUDE.md.fragment.md` no `CLAUDE.md` do projeto. É o que ensina o agente a decidir *quando* abrir uma change (feature, contrato, arquitetura) e quando fazer PR direto (bug fix, typo, config).
+Optional but recommended: append `openspec/schemas/sdd-superpowers/templates/adopters/CLAUDE.md.fragment.md` to the project's `CLAUDE.md`. It teaches the agent *when* to open a change (feature, contract, architecture) and when to go straight to a PR (bug fix, typo, config).
 
-## Uso
+## Usage
 
-> Guia completo de comandos e o passo a passo de uma feature: [docs/comandos.md](docs/comandos.md).
+> Full command reference and the step-by-step path of a feature: [docs/commands.md](docs/commands.md).
 
-Dentro do harness (Claude Code etc.), com os comandos `/opsx:*` que o OpenSpec instala:
+Inside the harness (Claude Code etc.), with the `/opsx:*` commands OpenSpec installs:
 
 ```text
-/opsx:new minha-feature   # cria a change
-/opsx:continue            # → brainstorm (conversa guiada pela skill)
+/opsx:new my-feature      # creates the change
+/opsx:continue            # → brainstorm (skill-guided conversation)
 /opsx:continue            # → proposal
-/opsx:continue            # → design (ou "Not needed: ...")
+/opsx:continue            # → design (or "Not needed: ...")
 /opsx:continue            # → specs
 /opsx:continue            # → tasks
 /opsx:continue            # → plan (writing-plans)
 /opsx:apply               # worktree + subagent-driven TDD → apply.md
 /opsx:verify              # 7 checks → verify.md
 /opsx:continue            # → retrospective
-/opsx:continue            # → finalize (menu: merge local / PR / manter)
-/opsx:archive             # sincroniza delta specs e arquiva a change
+/opsx:continue            # → finalize (menu: merge locally / PR / keep)
+/opsx:archive             # syncs delta specs and archives the change
 ```
 
-Para mudanças pequenas e bem entendidas, `/opsx:ff minha-feature` gera todos os artefatos de planejamento de uma vez; depois `/opsx:apply` em diante é igual.
+For small, well-understood changes, `/opsx:ff my-feature` produces all planning artifacts at once; from `/opsx:apply` on it is the same.
 
-Para pular o schema numa change específica: `/opsx:new fix-rapido --schema spec-driven`.
+To bypass the schema for one change: `/opsx:new quick-fix --schema spec-driven`.
 
-## Decisões de design
+## Design decisions
 
-- **`design.md` opcional, mas sempre "completo"**: quando não é necessário, o agente escreve uma linha (`Not needed: <motivo>`). Assim o grafo não fica com um artefato eternamente pendente e o `/opsx:continue` avança linear.
-- **`verify` requer `apply`, não `plan`**: o bridge declara `requires: [plan]` e tenta corrigir com prosa; aqui o recibo `apply.md` resolve estruturalmente.
-- **Commit pre-flight antes do worktree**: corrige o bug [#6 do bridge](https://github.com/JiangWay/openspec-schemas/issues/6) (artefatos untracked não existem dentro do worktree).
-- **Base branch sem `origin/main`**: corrige o [#14 do bridge](https://github.com/JiangWay/openspec-schemas/issues/14); resolve via `origin/HEAD`, depois `main`/`master`/`develop` locais, depois o root commit.
-- **`finalize` delega à skill**: `finishing-a-development-branch` já faz verify tests → detectar worktree → menu → merge/PR → cleanup. Reimplementar isso em YAML (como o superspec v4) é frágil e assume GitHub + `gh` + topologia fixa de branches.
-- **Retrospective antes do finalize**: fica no mesmo PR que o código, escrita com o contexto "quente".
-- **Sem fallback para `executing-plans`**: ela não ativa TDD nem code review transitivamente; sem subagentes, use o `spec-driven` nativo.
+- **`design.md` optional but always "complete"**: when it is not needed, the agent writes one line (`Not needed: <reason>`). The graph never has a permanently pending artifact and `/opsx:continue` moves linearly.
+- **`verify` requires `apply`, not `plan`**: the bridge declares `requires: [plan]` and patches it with prose; here the `apply.md` receipt solves it structurally.
+- **Pre-flight commit before the worktree**: fixes bridge bug [#6](https://github.com/JiangWay/openspec-schemas/issues/6) (untracked artifacts do not exist inside the worktree).
+- **Base branch without `origin/main`**: fixes bridge bug [#14](https://github.com/JiangWay/openspec-schemas/issues/14); resolves via `origin/HEAD`, then local `main`/`master`/`develop`, then the root commit.
+- **`finalize` delegates to the skill**: `finishing-a-development-branch` already does verify tests → detect worktree → menu → merge/PR → cleanup. Re-implementing that in YAML (as superspec v4 does) is brittle and assumes GitHub + `gh` + a fixed branch topology.
+- **Retrospective before finalize**: it lands in the same PR as the code, written while context is still hot.
+- **No `executing-plans` fallback**: it does not transitively activate TDD or code review; without subagents, use the built-in `spec-driven` schema.
 
-## Aviso: ledger do subagent-driven-development (Superpowers ≥ 6.x)
+## Note: subagent-driven-development ledger (Superpowers ≥ 6.x)
 
-A skill grava o progresso em `.superpowers/sdd/<basename-do-plano>/progress.md` na raiz da worktree, com o caminho completo do plano na primeira linha. Como todo plano deste schema se chama `plan.md`, o diretório é sempre `.superpowers/sdd/plan/`; a skill distingue changes pelo caminho gravado no ledger, mas não apaga o ledger alheio. Rode `/opsx:apply` sempre numa worktree por change (o passo 1 do apply instrui a limpar um ledger de outra change, se houver).
+The skill stores progress at `.superpowers/sdd/<plan-basename>/progress.md` in the worktree root, with the plan's full path on the first line. Since every plan in this schema is named `plan.md`, the directory is always `.superpowers/sdd/plan/`; the skill tells changes apart by the path recorded in the ledger but never deletes another plan's ledger. Always run `/opsx:apply` in one worktree per change (apply step 1 instructs the agent to clear a ledger belonging to another change, if any).
 
-## Licença
+## License
 
-MIT. Derivado de [danielhanold/superspec](https://github.com/danielhanold/superspec) (MIT © 2026 Daniel Hanold) e [JiangWay/openspec-schemas](https://github.com/JiangWay/openspec-schemas) (MIT). Instruções de `specs`/`tasks`/`design` adaptadas do schema `spec-driven` do OpenSpec (MIT).
+MIT. Derived from [danielhanold/superspec](https://github.com/danielhanold/superspec) (MIT © 2026 Daniel Hanold) and [JiangWay/openspec-schemas](https://github.com/JiangWay/openspec-schemas) (MIT). The `specs`/`tasks`/`design` instructions are adapted from OpenSpec's `spec-driven` schema (MIT).

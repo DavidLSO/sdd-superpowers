@@ -37,8 +37,12 @@ Cada artefato só fica disponível quando o anterior existe; `verify` exige `app
 Pré-requisitos: OpenSpec ≥ 1.13 e o plugin Superpowers instalado no seu harness (Claude Code: `claude plugin install superpowers@claude-plugins-official`).
 
 ```bash
+# uma vez por máquina: o perfil "core" instala só 4 comandos /opsx; o schema precisa de new/continue/ff/verify
+openspec config set profile custom
+openspec config set workflows '["propose","explore","new","continue","apply","ff","sync","archive","bulk-archive","verify","update"]'
+
 # na raiz do projeto que vai usar o schema
-openspec init                       # se ainda não tem openspec/
+openspec init                       # se ainda não tem openspec/ (ou `openspec update --force` para regenerar os comandos)
 mkdir -p openspec/schemas
 cp -r /caminho/para/sdd-superpowers/openspec/schemas/sdd-superpowers openspec/schemas/
 echo "schema: sdd-superpowers" > openspec/config.yaml   # ou use --schema por change
@@ -50,6 +54,8 @@ openspec schemas                    # sdd-superpowers deve aparecer
 Opcional, mas recomendado: cole `openspec/schemas/sdd-superpowers/templates/adopters/CLAUDE.md.fragment.md` no `CLAUDE.md` do projeto. É o que ensina o agente a decidir *quando* abrir uma change (feature, contrato, arquitetura) e quando fazer PR direto (bug fix, typo, config).
 
 ## Uso
+
+> Guia completo de comandos e o passo a passo de uma feature: [docs/comandos.md](docs/comandos.md).
 
 Dentro do harness (Claude Code etc.), com os comandos `/opsx:*` que o OpenSpec instala:
 
